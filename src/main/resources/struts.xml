@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE struts PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+"http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+
+<constant name="struts.devMode" value="true"/>
+<constant name="struts.objectFactory" value="spring"/>
+
+<package name="default" namespace="/" extends="struts-default,json-default">
+
+    <interceptors>
+        <interceptor name="sessionCheck" class="com.cms.interceptor.SessionInterceptor"/>
+        <interceptor-stack name="secureStack">
+            <interceptor-ref name="sessionCheck"/>
+            <interceptor-ref name="defaultStack"/>
+        </interceptor-stack>
+    </interceptors>
+
+    <!-- <action name="login"
+            class="com.cms.action.UserAction"
+            method="login">
+        <result name="csr">/dashboard.jsp</result>
+        <result name="manager" type="redirect">managerDashboardPage</result>
+        <result name="input">/login.jsp</result>
+    </action> -->
+    
+    <action name="login"
+        class="com.cms.action.UserAction"
+        method="login">
+    <result type="json"/>
+    <result name="error" type="json"/>
+</action>
+
+    <action name="logout"
+            class="com.cms.action.UserAction"
+            method="logout">
+        <result type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="createClaimPage">
+        <interceptor-ref name="secureStack"/>
+        <result>/claim-form.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="saveClaim"
+            class="com.cms.action.ClaimAction"
+            method="saveClaim">
+        <interceptor-ref name="secureStack"/>
+        <result name="success" type="redirect">listClaimsPage</result>
+        <result name="input">/claim-form.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="listClaimsPage">
+        <interceptor-ref name="secureStack"/>
+        <result>/claim-list.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="listClaims"
+            class="com.cms.action.ClaimAction"
+            method="listClaims">
+        <interceptor-ref name="secureStack"/>
+        <result type="json"/>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="submitClaim"
+            class="com.cms.action.ClaimAction"
+            method="submitClaim">
+        <interceptor-ref name="secureStack"/>
+        <result name="success" type="redirect">listClaimsPage</result>
+        <result name="input">/claim-list.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="managerDashboardPage">
+        <interceptor-ref name="secureStack"/>
+        <result>/manager-dashboard.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="managerDashboard"
+            class="com.cms.action.ClaimAction"
+            method="managerDashboard">
+        <interceptor-ref name="secureStack"/>
+        <result type="json"/>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="editClaim"
+            class="com.cms.action.ClaimAction"
+            method="editClaim">
+        <interceptor-ref name="secureStack"/>
+        <result>/edit-claim.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="updateClaim"
+            class="com.cms.action.ClaimAction"
+            method="updateClaim">
+        <interceptor-ref name="secureStack"/>
+        <result name="success" type="redirect">managerDashboardPage</result>
+        <result name="input">/edit-claim.jsp</result>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="searchClaimsByClaimant"
+            class="com.cms.action.ClaimAction"
+            method="searchClaimsByClaimant">
+        <interceptor-ref name="secureStack"/>
+        <result type="json"/>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+
+    <action name="searchClaimsByNumber"
+            class="com.cms.action.ClaimAction"
+            method="searchClaimsByNumber">
+        <interceptor-ref name="secureStack"/>
+        <result type="json"/>
+        <result name="login" type="redirect">/login.jsp</result>
+    </action>
+    
+    <action name="checkRole"
+        class="com.cms.action.UserAction"
+        method="checkRole">
+    <result name="csr">/dashboard.jsp</result>
+    <result name="manager" type="redirect">managerDashboardPage</result>
+    <result name="login" type="redirect">/login.jsp</result>
+</action>
+
+<action name="deleteClaim"
+        class="com.cms.action.ClaimAction"
+        method="deleteClaim">
+    <interceptor-ref name="secureStack"/>
+    <result type="json"/>
+    <result name="login" type="redirect">/login.jsp</result>
+</action>
+
+</package>
+
+</struts>
