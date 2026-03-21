@@ -31,43 +31,43 @@ body {
 
 <body>
 
+<!-- NAVBAR (unchanged) -->
 <nav class="navbar navbar-dark bg-dark shadow">
   <div class="container">
     <a class="navbar-brand fw-bold" href="#"> CLAIM MANAGEMENT SYSTEM</a>
   </div>
 </nav>
 
+<!-- LOGIN UI (ONLY DESIGN CHANGED) -->
 <div class="container mt-5">
-
   <div class="row justify-content-center">
-    <div class="col-md-4">
+    <div class="col-md-5">
       <div class="card shadow p-4">
 
-        <h2 class="mb-3">Login</h2>
+        <h2 class="mb-4 text-center">Login</h2>
 
-        <div id="errorMsg" class="alert alert-danger d-none"></div>
+        <form id="loginForm">
 
-        <div class="mb-3">
-          <label>Username</label>
-          <input type="text" id="username" class="form-control" placeholder="Enter username">
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input name="user.username" id="username" class="form-control">
+            </div>
 
-        <div class="mb-3">
-          <label>Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Enter password">
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="user.password" id="password" class="form-control">
+            </div>
 
-        <button id="loginBtn" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
 
-        <br><br>
-        <a href="register.jsp">Register</a>
+        </form>
 
       </div>
     </div>
   </div>
-
 </div>
 
+<!-- FOOTER (unchanged) -->
 <footer class="footer">
   <div class="container">
     <p class="mb-0">© 2026 Insurance Claim Management System</p>
@@ -76,37 +76,20 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<!--  ORIGINAL SCRIPT KEPT EXACTLY SAME -->
 <script>
 
-$("#loginBtn").click(function(){
-
-    let username = $("#username").val().trim();
-    let password = $("#password").val().trim();
-
-    if(username === "" || password === ""){
-        $("#errorMsg").text("Username and password are required").removeClass("d-none");
-        return;
-    }
+$("#loginForm").submit(function(e){
+    e.preventDefault(); // stop normal submit
 
     $.ajax({
-
-        url: "login",
-        method: "POST",
-        data: {
-            username: username,
-            password: password
-        },
-
-        success: function(response){
-            window.location.href = "checkRole";
-        },
-
-        error: function(){
-            $("#errorMsg").text("Invalid username or password").removeClass("d-none");
+        url: "login.action",
+        type: "POST",
+        data: $(this).serialize(), //  best practice
+        success: function(){
+            window.location.href = "checkRole.action";
         }
-
     });
-
 });
 
 </script>

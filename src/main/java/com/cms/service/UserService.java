@@ -5,5 +5,6 @@ import com.cms.entity.User;
 public interface UserService {
 	
 	User login(String username, String password);
+	public void saveUser(User user);
 
 }

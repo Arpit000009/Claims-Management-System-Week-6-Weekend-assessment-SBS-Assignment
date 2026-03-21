@@ -23,6 +23,17 @@ public class ClaimDAOImpl implements ClaimDAO {
         tx.commit();
         session.close();
     }
+    
+    @Override
+    public String generateClaimNumber() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try {
+            Long count = (Long) session.createQuery("SELECT COUNT(c) FROM Claim c").uniqueResult();
+            return String.format("CLM%04d", count + 1);
+        } finally {
+            session.close();
+        }
+    }
 
     @Override
     public List<Claim> getAllClaims() {

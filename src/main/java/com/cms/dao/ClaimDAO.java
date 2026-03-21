@@ -12,6 +12,8 @@ public interface ClaimDAO {
 //    void updateClaim(Claim claim);
 
 //    Claim getClaim(Long id);
+    
+    public String generateClaimNumber();
 
     List<Claim> getAllClaims();
     

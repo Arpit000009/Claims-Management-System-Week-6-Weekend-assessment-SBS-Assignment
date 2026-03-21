@@ -47,13 +47,26 @@
     </action>
 
     <action name="saveClaim"
-            class="com.cms.action.ClaimAction"
-            method="saveClaim">
-        <interceptor-ref name="secureStack"/>
-        <result name="success" type="redirect">listClaimsPage</result>
-        <result name="input">/claim-form.jsp</result>
-        <result name="login" type="redirect">/login.jsp</result>
-    </action>
+        class="com.cms.action.ClaimAction"
+        method="saveClaim">
+
+    <interceptor-ref name="secureStack"/>
+
+    <result type="json">
+        <param name="root">response</param>
+    </result>
+
+    <result name="input" type="json">
+        <param name="root">response</param>
+    </result>
+
+    <result name="error" type="json">
+        <param name="root">response</param>
+    </result>
+
+    <result name="login" type="redirect">/login.jsp</result>
+
+</action>
 
     <action name="listClaimsPage">
         <interceptor-ref name="secureStack"/>
@@ -139,6 +152,12 @@
     <interceptor-ref name="secureStack"/>
     <result type="json"/>
     <result name="login" type="redirect">/login.jsp</result>
+</action>
+
+<action name="register" class="com.cms.action.UserAction" method="register">
+    <result type="json">
+        <param name="root">response</param>
+    </result>
 </action>
 
 </package>

@@ -25,6 +25,11 @@ public class ClaimServiceImpl implements ClaimService {
     }
 
     @Override
+    public String generateClaimNumber() {
+        return claimDAO.generateClaimNumber();
+    }
+    
+    @Override
     public List<Claim> getAllClaims() {
 
         return claimDAO.getAllClaims();
@@ -32,6 +37,9 @@ public class ClaimServiceImpl implements ClaimService {
     
     @Override
     public void saveClaim(Claim claim) {
+    	
+    	String generatedNumber = claimDAO.generateClaimNumber(); 
+        claim.setClaimNumber(generatedNumber);  
 
         claimDAO.saveClaim(claim);
 

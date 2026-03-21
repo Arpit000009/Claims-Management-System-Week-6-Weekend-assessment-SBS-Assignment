@@ -1,219 +1,132 @@
 <%@ taglib prefix="s" uri="/struts-tags" %>
-
 <%@ include file="header.jsp" %>
 
 <div class="container mt-5">
-
   <div class="row justify-content-center">
     <div class="col-md-7">
       <div class="card shadow p-4">
 
         <h2 class="mb-4">Create Claim</h2>
 
-        <s:form action="saveClaim" id="claimForm">
+        <form id="claimForm">
 
           <div class="mb-3">
-            <s:textfield name="claim.claimNumber"
-                         label="Claim Number"
-                         cssClass="form-control"
-                         id="claimNumber"/>
-            <div class="text-danger" id="claimNumberError"></div>
+    <label class="form-label">Claim Number</label>
+    <input type="text" class="form-control" id="claimNumber" 
+           name="claim.claimNumber" readonly 
+           style="background-color: #e9ecef;">
+    <div class="text-muted small">Auto-generated on save</div>
+</div>
+          <div class="mb-3">
+            <label class="form-label">Accident Date</label>
+            <input type="date" class="form-control" id="accidentDate" name="accidentDateStr">
+            <div class="text-danger small" id="accidentDateError"></div>
           </div>
 
           <div class="mb-3">
-            <s:textfield name="claim.accidentDate"
-                         label="Accident Date"
-                         cssClass="form-control"
-                         type="date"
-                         id="accidentDate"/>
-            <div class="text-danger" id="accidentDateError"></div>
+            <label class="form-label">Accident Address</label>
+            <input type="text" class="form-control" id="accidentAddress" name="claim.accidentAddress">
+            <div class="text-danger small" id="accidentAddressError"></div>
           </div>
 
           <div class="mb-3">
-            <s:textfield name="claim.accidentAddress"
-                         label="Accident Address"
-                         cssClass="form-control"
-                         id="accidentAddress"/>
-            <div class="text-danger" id="accidentAddressError"></div>
+            <label class="form-label">Claimant Name</label>
+            <input type="text" class="form-control" id="claimantName" name="claim.claimantName">
+            <div class="text-danger small" id="claimantNameError"></div>
           </div>
 
           <div class="mb-3">
-            <s:textfield name="claim.claimantName"
-                         label="Claimant Name"
-                         cssClass="form-control"
-                         id="claimantName"/>
-            <div class="text-danger" id="claimantNameError"></div>
+            <label class="form-label">Claimant Date Of Birth</label>
+            <input type="date" class="form-control" id="claimantDob" name="claimantDobStr">
+            <div class="text-danger small" id="claimantDobError"></div>
           </div>
 
-          <div class="mb-3">
-            <s:textfield name="claim.claimantDob"
-                         label="Claimant Date Of Birth"
-                         cssClass="form-control"
-                         type="date"
-                         id="claimantDob"/>
-            <div class="text-danger" id="claimantDobError"></div>
-          </div>
+          <button type="submit" class="btn btn-success" id="saveBtn">Save Claim</button>
 
-          <s:submit value="Save Claim" cssClass="btn btn-success" id="submitBtn"/>
-
-        </s:form>
+        </form>
 
       </div>
     </div>
   </div>
-
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+$(document).ready(function () {
 
-$(document).ready(function(){
+    const errorDivIds = [
+        "claimNumberError",
+        "accidentDateError",
+        "accidentAddressError",
+        "claimantNameError",
+        "claimantDobError"
+    ];
 
-    $("#claimForm").submit(function(e){
+    const serverFieldMap = {
+        "claim.claimNumber":     "claimNumberError",
+        "claim.accidentDate":    "accidentDateError",
+        "claim.accidentAddress": "accidentAddressError",
+        "claim.claimantName":    "claimantNameError",
+        "claim.claimantDob":     "claimantDobError"
+    };
 
-        if(!validateForm()){
-            e.preventDefault();
-        }
+    function clearAllErrors() {
+        $.each(errorDivIds, function(i, id) {
+            $("#" + id).text("");
+        });
+    }
 
+    function showFieldErrors(fieldErrors) {
+        $.each(fieldErrors, function(key, msgs) {
+            const divId = serverFieldMap[key];
+            if (divId) {
+                $("#" + divId).text(msgs[0]);
+            }
+        });
+    }
+
+    function setLoading(loading) {
+        $("#saveBtn").prop("disabled", loading);
+        $("#saveBtn").text(loading ? "Saving..." : "Save Claim");
+    }
+
+    $("#claimForm").submit(function(e) {
+        e.preventDefault();
+
+        clearAllErrors();
+        setLoading(true);
+
+        $.ajax({
+            url: "saveClaim.action",
+            type: "POST",
+            data: $("#claimForm").serialize(), 
+
+            success: function(result) {
+                console.log("Response:", result);
+
+                if (result.success) {
+                    window.location.href = "listClaimsPage";
+                }
+                else if (result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+                    showFieldErrors(result.fieldErrors);
+                } 
+                else {
+                    alert(result.message || "An error occurred.");
+                }
+            },
+
+            error: function(xhr) {
+                console.error("Error:", xhr.responseText);
+                alert("Server error");
+            },
+
+            complete: function() {
+                setLoading(false);
+            }
+        });
     });
-
-    $("#claimNumber").on("input", function(){
-        validateClaimNumber();
-    });
-
-    $("#accidentDate").on("change", function(){
-        validateAccidentDate();
-    });
-
-    $("#accidentAddress").on("input", function(){
-        validateAccidentAddress();
-    });
-
-    $("#claimantName").on("input", function(){
-        validateClaimantName();
-    });
-
-    $("#claimantDob").on("change", function(){
-        validateClaimantDob();
-    });
-
 });
-
-function validateForm(){
-
-    let valid = true;
-
-    if(!validateClaimNumber()) valid = false;
-    if(!validateAccidentDate()) valid = false;
-    if(!validateAccidentAddress()) valid = false;
-    if(!validateClaimantName()) valid = false;
-    if(!validateClaimantDob()) valid = false;
-
-    return valid;
-}
-
-function validateClaimNumber(){
-
-    let val = $("#claimNumber").val().trim();
-
-    if(val === ""){
-        showError("claimNumberError", "Claim number is required");
-        return false;
-    }
-
-    clearError("claimNumberError");
-    return true;
-}
-
-function validateAccidentDate(){
-
-    let val = $("#accidentDate").val();
-
-    if(val === ""){
-        showError("accidentDateError", "Accident date is required");
-        return false;
-    }
-
-    let selected = new Date(val);
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if(selected > today){
-        showError("accidentDateError", "Accident date cannot be in the future");
-        return false;
-    }
-
-    clearError("accidentDateError");
-    return true;
-}
-
-function validateAccidentAddress(){
-
-    let val = $("#accidentAddress").val().trim();
-
-    if(val === ""){
-        showError("accidentAddressError", "Accident address is required");
-        return false;
-    }
-
-    clearError("accidentAddressError");
-    return true;
-}
-
-function validateClaimantName(){
-
-    let val = $("#claimantName").val().trim();
-
-    if(val === ""){
-        showError("claimantNameError", "Claimant name is required");
-        return false;
-    }
-
-    clearError("claimantNameError");
-    return true;
-}
-
-function validateClaimantDob(){
-
-    let val = $("#claimantDob").val();
-
-    if(val === ""){
-        showError("claimantDobError", "Claimant date of birth is required");
-        return false;
-    }
-
-    let dob = new Date(val);
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if(dob > today){
-        showError("claimantDobError", "Date of birth cannot be in the future");
-        return false;
-    }
-
-    let age = today.getFullYear() - dob.getFullYear();
-    let monthDiff = today.getMonth() - dob.getMonth();
-
-    if(monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())){
-        age--;
-    }
-
-    if(age < 18){
-        showError("claimantDobError", "Claimant must be at least 18 years old");
-        return false;
-    }
-
-    clearError("claimantDobError");
-    return true;
-}
-
-function showError(id, message){
-    $("#" + id).text(message);
-}
-
-function clearError(id){
-    $("#" + id).text("");
-}
-
 </script>
 
 <%@ include file="footer.jsp" %>

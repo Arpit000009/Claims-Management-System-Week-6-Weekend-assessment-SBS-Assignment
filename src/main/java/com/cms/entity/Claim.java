@@ -1,6 +1,9 @@
 package com.cms.entity;
 
 import javax.persistence.*;
+
+import org.apache.struts2.json.annotations.JSON;
+
 import java.util.Date;
 
 @Entity
@@ -60,8 +63,9 @@ public class Claim {
 		this.claimNumber = claimNumber;
 	}
 
+	@JSON(format = "yyyy-MM-dd")
 	public Date getAccidentDate() {
-		return accidentDate;
+	    return accidentDate;
 	}
 
 	public void setAccidentDate(Date accidentDate) {
@@ -84,8 +88,9 @@ public class Claim {
 		this.claimantName = claimantName;
 	}
 
+	@JSON(format = "yyyy-MM-dd")
 	public Date getClaimantDob() {
-		return claimantDob;
+	    return claimantDob;
 	}
 
 	public void setClaimantDob(Date claimantDob) {

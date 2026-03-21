@@ -1,5 +1,7 @@
 package com.cms.action;
+import com.opensymphony.xwork2.Preparable;
 
+import com.cms.DTO.ApiResponse;
 import com.cms.entity.Claim;
 import com.cms.entity.User;
 import com.cms.service.ClaimService;
@@ -9,6 +11,7 @@ import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.interceptor.validation.SkipValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -20,13 +23,21 @@ public class ClaimAction extends ActionSupport {
     @Autowired
     private ClaimService claimService;
 
-    private Claim claim;
+    private Claim claim = new Claim();
 
     private List<Claim> claims;
     
     private String claimantName;
     
     private String claimNumber;
+    
+    
+    private String accidentDateStr;
+    private String claimantDobStr;
+    
+    private ApiResponse response = new ApiResponse();
+//    private boolean success;
+//    private String message;
 
     public String createClaim() {
 
@@ -52,20 +63,52 @@ public class ClaimAction extends ActionSupport {
     }
     
     public String saveClaim() {
+    	
+    	if (hasFieldErrors()) {
+            response.setSuccess(false);
+            response.setMessage("Validation failed");
+            response.setFieldErrors(getFieldErrors());
+            return SUCCESS; // return JSON
+        }
+    	
+        try {
+            // Parse date strings FIRST so validate() sees populated dates
+            
 
-        HttpSession session =
-                ServletActionContext.getRequest().getSession();
+            HttpSession session = ServletActionContext.getRequest().getSession();
+            User user = (User) session.getAttribute("user");
 
-        User user = (User) session.getAttribute("user");
+            claim.setUser(user);
+            claim.setStatus("NEW");
+            claimService.saveClaim(claim);
 
-        claim.setUser(user);     
-
-        claim.setStatus("NEW");
-
-        claimService.saveClaim(claim);
-
+            response.setSuccess(true);
+            response.setMessage("Claim saved successfully");
+            response.setData(claim);
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setSuccess(false);
+            response.setMessage("Error: " + e.getMessage());
+            
+        }
         return SUCCESS;
     }
+    
+// // Add this method to your ClaimAction
+//    public void prepare() {
+//        if (claim == null) claim = new Claim();
+//        try {
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//            if (accidentDateStr != null && !accidentDateStr.isEmpty())
+//                claim.setAccidentDate(sdf.parse(accidentDateStr));
+//            if (claimantDobStr != null && !claimantDobStr.isEmpty())
+//                claim.setClaimantDob(sdf.parse(claimantDobStr));
+//        } catch (Exception e) {
+//            // leave dates null — validate() will catch them
+//        }
+//    }
+
     
     @SkipValidation
     public String submitClaim() {
@@ -134,8 +177,12 @@ public class ClaimAction extends ActionSupport {
         return SUCCESS;
     }
     
-    
-    public String searchClaimsByNumber() {
+ 
+	public void setResponse(ApiResponse response) {
+		this.response = response;
+	}
+
+	public String searchClaimsByNumber() {
 
         HttpSession session =
             ServletActionContext.getRequest().getSession();
@@ -202,52 +249,138 @@ public class ClaimAction extends ActionSupport {
 	    this.claimNumber = claimNumber;
 	}
 	
-	@Override
-	public void validate() {
-
-	    if (claim == null) {
-	        return;
-	    }
-
-	    Date today = new Date();
-
-
-	    if (claim.getAccidentDate() != null && claim.getAccidentDate().after(today)) {
-	        addFieldError("claim.accidentDate", "Accident date cannot be in the future");
-	    }
-
-	    if (claim.getClaimantDob() != null && claim.getClaimantDob().after(today)) {
-	        addFieldError("claim.claimantDob", "Claimant DOB cannot be in the future");
-	    }
-
-	    if (claim.getClaimantDob() != null) {
-
-	        Calendar dob = Calendar.getInstance();
-	        dob.setTime(claim.getClaimantDob());
-
-	        Calendar todayCal = Calendar.getInstance();
-
-	        int age = todayCal.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
-
-	        if (todayCal.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
-	            age--;
-	        }
-
-	        if (age < 18) {
-	            addFieldError("claim.claimantDob", "Claimant must be at least 18 years old");
-	        }
-	    }
-
-	    if (claim.getClaimantName() == null || claim.getClaimantName().trim().isEmpty()) {
-	        addFieldError("claim.claimantName", "Claimant name is required");
-	    }
-
-	    if (claim.getAccidentAddress() == null || claim.getAccidentAddress().trim().isEmpty()) {
-	        addFieldError("claim.accidentAddress", "Accident address is required");
-	    }
+	public String getAccidentDateStr() {
+	    return accidentDateStr;
 	}
 
+	public void setAccidentDateStr(String accidentDateStr) {
+	    this.accidentDateStr = accidentDateStr;
+	}
 
+	public String getClaimantDobStr() {
+	    return claimantDobStr;
+	}
+
+	public void setClaimantDobStr(String claimantDobStr) {
+	    this.claimantDobStr = claimantDobStr;
+	}
+	  
+    public ApiResponse getResponse() {
+		return response;
+	}
+
+   
+    public void validateSaveClaim() {
+
+        if (claim == null) return;
+
+        // Parse dates HERE, before validating them
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            if (accidentDateStr != null && !accidentDateStr.isEmpty())
+                claim.setAccidentDate(sdf.parse(accidentDateStr));
+        } catch (Exception e) {
+            addFieldError("claim.accidentDate", "Invalid date format");
+        }
+
+        try {
+            if (claimantDobStr != null && !claimantDobStr.isEmpty())
+                claim.setClaimantDob(sdf.parse(claimantDobStr));
+        } catch (Exception e) {
+            addFieldError("claim.claimantDob", "Invalid date format");
+        }
+
+//        if (claim.getClaimNumber() == null || claim.getClaimNumber().trim().isEmpty())
+//            addFieldError("claim.claimNumber", "Claim Number is required");
+
+        if (claim.getClaimantName() == null || claim.getClaimantName().trim().isEmpty())
+            addFieldError("claim.claimantName", "Claimant Name is required");
+
+        if (claim.getAccidentAddress() == null || claim.getAccidentAddress().trim().isEmpty())
+            addFieldError("claim.accidentAddress", "Accident Address is required");
+
+        if (claim.getAccidentDate() == null) {
+            addFieldError("claim.accidentDate", "Accident Date is required");
+        } else if (claim.getAccidentDate().after(new Date())) {
+            addFieldError("claim.accidentDate", "Future accident date is not allowed");
+        }
+
+        if (claim.getClaimantDob() == null) {
+            addFieldError("claim.claimantDob", "Claimant DOB is required");
+        } else {
+            Calendar today = Calendar.getInstance();
+            Calendar dob = Calendar.getInstance();
+            dob.setTime(claim.getClaimantDob());
+
+            int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+            if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) age--;
+
+            if (age < 18)
+                addFieldError("claim.claimantDob", "Claimant must be at least 18 years old");
+        }
+
+        if (hasFieldErrors()) {
+            response.setSuccess(false);
+            response.setMessage("Validation failed");
+            response.setFieldErrors(getFieldErrors());
+        }
+    }
+    
+    public void validateUpdateClaim() {
+
+        if (claim == null) return;
+
+        // Parse dates HERE, before validating them
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            if (accidentDateStr != null && !accidentDateStr.isEmpty())
+                claim.setAccidentDate(sdf.parse(accidentDateStr));
+        } catch (Exception e) {
+            addFieldError("claim.accidentDate", "Invalid date format");
+        }
+
+        try {
+            if (claimantDobStr != null && !claimantDobStr.isEmpty())
+                claim.setClaimantDob(sdf.parse(claimantDobStr));
+        } catch (Exception e) {
+            addFieldError("claim.claimantDob", "Invalid date format");
+        }
+
+        if (claim.getClaimNumber() == null || claim.getClaimNumber().trim().isEmpty())
+            addFieldError("claim.claimNumber", "Claim Number is required");
+
+        if (claim.getClaimantName() == null || claim.getClaimantName().trim().isEmpty())
+            addFieldError("claim.claimantName", "Claimant Name is required");
+
+        if (claim.getAccidentAddress() == null || claim.getAccidentAddress().trim().isEmpty())
+            addFieldError("claim.accidentAddress", "Accident Address is required");
+
+        if (claim.getAccidentDate() == null) {
+            addFieldError("claim.accidentDate", "Accident Date is required");
+        } else if (claim.getAccidentDate().after(new Date())) {
+            addFieldError("claim.accidentDate", "Future accident date is not allowed");
+        }
+
+//        if (claim.getClaimantDob() == null) {
+//            addFieldError("claim.claimantDob", "Claimant DOB is required");
+//        } else {
+//            Calendar today = Calendar.getInstance();
+//            Calendar dob = Calendar.getInstance();
+//            dob.setTime(claim.getClaimantDob());
+//
+//            int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+//            if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) age--;
+//
+//            if (age < 18)
+//                addFieldError("claim.claimantDob", "Claimant must be at least 18 years old");
+//        }
+
+        if (hasFieldErrors()) {
+            response.setSuccess(false);
+            response.setMessage("Validation failed");
+            response.setFieldErrors(getFieldErrors());
+        }
+    }
     
     
 }

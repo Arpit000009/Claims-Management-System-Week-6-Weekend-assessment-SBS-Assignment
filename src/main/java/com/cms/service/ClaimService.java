@@ -7,6 +7,8 @@ import com.cms.entity.Claim;
 public interface ClaimService {
 
     void createClaim(Claim claim);
+    
+    String generateClaimNumber();
 
     List<Claim> getAllClaims();
     
